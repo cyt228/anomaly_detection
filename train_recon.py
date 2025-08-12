@@ -27,14 +27,14 @@ def save_samples(x, y, yhat, names, out_dir, step_tag):
     grid = torch.cat(rows, dim=1)  # along height
     vutils.save_image(grid, os.path.join(out_dir, f"samples_{step_tag}.png"))
 
-def train_one_epoch(model, loader, optimizer, scaler, device, criterion, epoch, log_dir):
+def train_one_epoch(model, loader, optimizer, scaler, device, criterion, epoch, args):
     model.train()
     total_loss, total_psnr = 0.0, 0.0
     for it, (x, y, names) in enumerate(loader, 1):
         x = x.to(device)
         y = y.to(device)
         optimizer.zero_grad(set_to_none=True)
-        with torch.cuda.amp.autocast(enabled=scaler is not None):
+        with torch.amp.autocast('cuda',  enabled=args.amp):
             yhat = model(x)
             loss = criterion(yhat, y)
         if scaler is not None:
@@ -54,7 +54,7 @@ def train_one_epoch(model, loader, optimizer, scaler, device, criterion, epoch, 
             print(f"Epoch {epoch} | iter {it}/{len(loader)} | loss {loss.item():.4f} | PSNR {batch_psnr.item():.2f} dB")
     # save sample grid
     with torch.no_grad():
-        save_samples(x, y, yhat, names, os.path.join(log_dir, "samples"), f"epoch{epoch:03d}")
+        save_samples(x, y, yhat, names, os.path.join(args.out_dir, "samples"), f"epoch{epoch:03d}")
     return total_loss / len(loader), total_psnr / len(loader)
 
 @torch.no_grad()
@@ -109,13 +109,13 @@ def main():
     ).to(device)
 
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr)
-    scaler = torch.cuda.amp.GradScaler(enabled=args.amp)
+    scaler = torch.amp.GradScaler('cuda', enabled=args.amp)
     criterion = ReconLoss(alpha=1.0, beta=0.1)  # L1 + 0.1*(1-SSIM)
     os.makedirs(args.out_dir, exist_ok=True)
     best_val = -1e9  # use PSNR for model selection
 
     for epoch in range(1, args.epochs + 1):
-        tr_loss, tr_psnr = train_one_epoch(model, dl_train, optimizer, scaler, device, criterion, epoch, args.out_dir)
+        tr_loss, tr_psnr = train_one_epoch(model, dl_train, optimizer, scaler, device, criterion, epoch, args)
         print(f"[Train] epoch {epoch}: loss={tr_loss:.4f}, PSNR={tr_psnr:.2f} dB")
 
         val_psnr = None
