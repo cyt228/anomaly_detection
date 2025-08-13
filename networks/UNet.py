@@ -14,7 +14,7 @@ class UNet(nn.Module):
         self.is_batchnorm = is_batchnorm
         
 
-        filters = [64, 128, 256, 512, 1024]
+        filters = [32, 64, 128, 256, 512]
         filters = [int(x / self.feature_scale) for x in filters]
 
         # downsampling
