@@ -17,7 +17,7 @@ def build_transforms(img_size: int):
         T.Resize((img_size, img_size)),
         T.ToTensor(),  # scales to [0,1]
     ])
-
+'''
 def save_samples(x, y, yhat, names, out_dir, step_tag):
     os.makedirs(out_dir, exist_ok=True)
     # make a simple grid: [defect | recon | target]
@@ -26,6 +26,7 @@ def save_samples(x, y, yhat, names, out_dir, step_tag):
         rows.append(torch.cat([x[i], yhat[i], y[i]], dim=2))  # along width
     grid = torch.cat(rows, dim=1)  # along height
     vutils.save_image(grid, os.path.join(out_dir, f"samples_{step_tag}.png"))
+'''
 
 def train_one_epoch(model, loader, optimizer, scaler, device, criterion, epoch, args):
     model.train()
@@ -53,8 +54,8 @@ def train_one_epoch(model, loader, optimizer, scaler, device, criterion, epoch, 
         if it % 50 == 0:
             print(f"Epoch {epoch} | iter {it}/{len(loader)} | loss {loss.item():.4f} | PSNR {batch_psnr.item():.2f} dB")
     # save sample grid
-    with torch.no_grad():
-        save_samples(x, y, yhat, names, os.path.join(args.out_dir, "samples"), f"epoch{epoch:03d}")
+    #with torch.no_grad():
+    #    save_samples(x, y, yhat, names, os.path.join(args.out_dir, "samples"), f"epoch{epoch:03d}")
     return total_loss / len(loader), total_psnr / len(loader)
 
 @torch.no_grad()
@@ -68,7 +69,7 @@ def validate(model, loader, device, criterion, epoch, log_dir):
         total_loss += criterion(yhat, y).item()
         total_psnr += psnr(yhat.clamp(0,1), y).item()
     # save samples
-    save_samples(x, y, yhat, names, os.path.join(log_dir, "samples"), f"val_epoch{epoch:03d}")
+    #save_samples(x, y, yhat, names, os.path.join(log_dir, "samples"), f"val_epoch{epoch:03d}")
     return total_loss / len(loader), total_psnr / len(loader)
 
 def main():

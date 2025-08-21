@@ -4,7 +4,7 @@ import os
 
 def random_region(img,
                   shape_types = ("circle","vert_strip","hori_strip"), # rect
-                  area_ratio_range = (0.005, 0.01), # 區域面積佔整張圖比例(最小, 最大)
+                  area_ratio_range = (0.1, 0.2), # 區域面積佔整張圖比例(最小, 最大)
                   rng: np.random.Generator = None):
     
     H, W = img.shape[:2]
@@ -32,7 +32,7 @@ def random_region(img,
 
     if shape == "vert_strip":
         # 直條
-        aspect = float(rng.uniform(2, 50)) # 分配長寬比
+        aspect = float(rng.uniform(5, 80)) # 分配長寬比
         w = max(1, int(np.sqrt(target_area / aspect))) # aspect越大，w越小
         h = max(2, int(w * aspect))
         x, y, w, h = place_rect(w, h)
@@ -40,21 +40,21 @@ def random_region(img,
     
     elif shape == "hori_strip":
         # 橫條
-        aspect = float(rng.uniform(2, 50))
+        aspect = float(rng.uniform(5, 80))
         h = max(1, int(np.sqrt(target_area / aspect)))
         w = max(2, int(h * aspect))
         x, y, w, h = place_rect(w, h)
     
     elif shape == "rect":
         # 一般矩形
-        ar = float(rng.uniform(0.4, 2))  # 長寬比
-        w = np.sqrt(target_area * 0.05 * ar)
+        ar = float(rng.uniform(0.8, 5))  # 長寬比
+        w = np.sqrt(target_area * ar)
         h = target_area / w
         x, y, w, h = place_rect(w, h)
     
     elif shape == 'circle':
         # 圓形
-        r = int(max(1, np.sqrt(target_area * 0.3 / np.pi))) # 半徑
+        r = int(max(1, np.sqrt(target_area / np.pi))) # 半徑
         cx = int(rng.integers(r, W - r))
         cy = int(rng.integers(r, H - r))
         cv2.circle(mask, (cx, cy), r, 255, -1)
@@ -67,7 +67,7 @@ def random_region(img,
 
 def add_salt_pepper_in_mask(img,
                             mask,
-                            density = 0.15, #雜訊密度
+                            density = 0.3, #雜訊密度
                             salt_vs_pepper = 0.5, # salt比例
                             rng: np.random.Generator = None):
     if rng is None:
@@ -130,8 +130,8 @@ print(png_files)
 
 #out_path = 'dataset/SP3/train/defect/'
 ''''''
-out_path = 'dataset/SP3/train/defect_for_classify/'
-csv_path = 'dataset/SP3/train/defect_for_classify/no_defects.csv'
+out_path = 'dataset/SP3/train/defect/'
+csv_path = 'dataset/SP3/train/defect/no_defects.csv'
 OVERWRITE = True
 os.makedirs(out_path, exist_ok = True)
 ''''''
